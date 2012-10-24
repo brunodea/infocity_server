@@ -18,4 +18,4 @@ def events(request):
         event_name = 'post event type'
 
     response = jsonhelper.toJSON(EventType(name=event_name))
-    return HttpResponse(str(response))
+    return HttpResponse(str(response),'application/json')
