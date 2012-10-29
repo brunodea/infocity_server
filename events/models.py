@@ -1,4 +1,4 @@
-from django.db import models
+from django.contrib.gis.db import models
 
 class EventType(models.Model):
     name = models.CharField(max_length=64)
@@ -8,3 +8,5 @@ class Event(models.Model):
     description = models.CharField(max_length=300)
     event_type = models.ForeignKey(EventType)
     pub_date = models.DateTimeField('date published')
+    geo_coord = models.PointField()
+    objects = models.GeoManager()
