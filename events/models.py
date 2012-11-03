@@ -1,3 +1,5 @@
+#-*- coding: utf8 -*-
+
 from django.contrib.gis.db import models
 
 class EventType(models.Model):
