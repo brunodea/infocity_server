@@ -10,5 +10,7 @@ class Event(models.Model):
     description = models.CharField(max_length=300)
     event_type = models.ForeignKey(EventType)
     pub_date = models.DateTimeField('date published')
+    
+    #GeoDjango específico.
     geo_coord = models.PointField()
     objects = models.GeoManager()
