@@ -1,4 +1,4 @@
-from django.core.serializers import serialize
+from django.core.serializers import serialize, deserialize
 from django.db import models
 from django.db.models.query import QuerySet
 
@@ -13,3 +13,6 @@ def toJSON(obj):
     ser = serialize('json',set_obj)
     set_str = ser[1:len(ser)-1]
     return set_str
+
+def fromJSON(obj, ignore_non_existent):
+    return deserialize('json', obj, ignorenonexistent=ignore_non_existent)
