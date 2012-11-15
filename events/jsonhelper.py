@@ -10,9 +10,10 @@ def toJSON(obj):
     else:
         return None
 
-    ser = serialize('json',set_obj)
+    ser = serialize('json',set_obj,ensure_ascii=False)
     set_str = ser[1:len(ser)-1]
     return set_str
 
 def fromJSON(obj, ignore_non_existent):
-    return deserialize('json', obj, ignorenonexistent=ignore_non_existent)
+    return deserialize('json', obj, ensure_ascii=False,
+        ignorenonexistent=ignore_non_existent)
