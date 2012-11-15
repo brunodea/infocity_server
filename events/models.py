@@ -12,7 +12,7 @@ class EventKeyword(models.Model):
     keyword = models.CharField(max_length=128)
 
     def __unicode__(self):
-        return str(keyword)
+        return str(self.keyword)
 
 class Event(models.Model):
     title = models.CharField(max_length=64)
