@@ -27,7 +27,8 @@ def addNewEvent(request):
     """
     response = {'response':'ok'}
     try:
-        items = jsonhelper.fromJSON(request.POST['event'],False)
+        event_json = request.POST['event'].encode('utf-8')
+        items = jsonhelper.fromJSON(event_json, True)
         for item in items:
             item.save()
     except DeserializationError as error:

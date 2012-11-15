@@ -29,3 +29,4 @@ class Event(models.Model):
         return "[%s]%s (%s) : %s\n%s\n%s" % (str(self.geo_coord),
             str(self.title), str(self.event_type), str(self.pub_date),
             str(self.description), 'keywords...')
+            
