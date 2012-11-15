@@ -26,7 +26,5 @@ class Event(models.Model):
     objects = models.GeoManager()
     
     def __unicode__(self):
-        return "[%s]%s (%s) : %s\n%s\n%s" % (str(self.geo_coord),
-            str(self.title), str(self.event_type), str(self.pub_date),
-            str(self.description), 'keywords...')
+        return self.title + " " + str(self.geo_coord)
             
