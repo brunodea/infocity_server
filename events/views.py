@@ -54,3 +54,27 @@ def addNewEvent(request):
     except DeserializationError as error:
         response['response'] = str(error)
     return HttpResponse(str(response),'application/json')
+
+def getEventsWithin(request, latitude, longitude, distance_meters):
+    pnt = GEOSGeometry('POINT('+latitude+' '+longitude+')')
+    events = Event.objects.filter(geo_coord__distance_lte=(pnt,float(distance_meters)))
+    response = {'size': len(events)}
+    i = 0
+    for e in events:
+        event_type = EventType.objects.get(pk=e.event_type.pk).name
+        keywords = [EventKeyword.objects.get(pk=key.pk).keyword for key in e.keywords.all()]
+        json = eval(jsonhelper.toJSON(e))
+        geo_coord = json['fields']['geo_coord']
+        json['fields']['event_type'] = event_type
+        json['fields']['keywords'] = keywords
+        response['event_'+str(i)] = json
+    return HttpResponse(str(response),'application/json')
+
+
+
+
+
+
+
+
+
