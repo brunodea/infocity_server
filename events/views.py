@@ -11,7 +11,8 @@ def addNewEvent(request):
     """
     response = {'response':'ok'}
     try:
-    
+        #event_type and event_keywords come as names, not IDs. So we need first
+        #to get their primary keys so we can save the Event properly.
         event_type_name = request.POST['event_type'].encode('utf-8').lower().strip()
         event_type, created = EventType.objects.get_or_create(name=event_type_name)
     
@@ -22,6 +23,8 @@ def addNewEvent(request):
             k, created = EventKeyword.objects.get_or_create(keyword=keyword.strip())
             keywords.append(k)
 
+        #gets what is interesting about the Event and makes it compatible 
+        #with the server's format.
         event_json = eval(request.POST['event'].encode('utf-8'))[0]['fields']
 
         geo_coord = event_json['geo_coord'].replace(',',' ')
@@ -38,10 +41,16 @@ def addNewEvent(request):
     except DeserializationError as error:
         response['response'] = str(error)
         
+    #returns a json with an error or an ok and the primary key from the added event.
     return jsonhelper.json_response(response)
 
 def getEventsWithin(request, latitude, longitude, distance_meters, discard_pks):
+    """
+    Returns a json with all the events within some distance from some location
+    and that doesn't have the primary key in the list discard_pks.
+    """
     pnt = GEOSGeometry('POINT('+longitude+' '+latitude+')')
+    #creates the list of not wanted primary keys.
     discard_pks = map(int,filter(None, discard_pks.split('/')))
     events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
     response = {'size': len(events)}
@@ -51,14 +60,16 @@ def getEventsWithin(request, latitude, longitude, distance_meters, discard_pks):
         if e.pk in discard_pks:
             continue
         response[str(i)] = str(e)
+        #sends the name string of event_type and the keywords instead of sending
+        #their primary keys.
         event_type = EventType.objects.get(pk=e.event_type.pk).name
         keywords = [EventKeyword.objects.get(pk=key.pk).keyword for key in e.keywords.all()]
         json = eval(jsonhelper.toJSON(e))
-        geo_coord = json['fields']['geo_coord']
         json['fields']['event_type'] = event_type
         json['fields']['keywords'] = keywords
         response['event_'+str(i)] = json
         i += 1
+    #returns a json with the number of fetched events and with them as well.
     return jsonhelper.json_response(response)
 
 
