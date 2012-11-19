@@ -17,3 +17,10 @@ def toJSON(obj):
 def fromJSON(obj, ignore_non_existent):
     return deserialize('json', obj, ensure_ascii=False,
         ignorenonexistent=ignore_non_existent)
+
+def json_response(something):
+    return HttpResponse(
+        simplejson.dumps(something),
+        content_type='application/json; charset=utf8'
+    )
+
