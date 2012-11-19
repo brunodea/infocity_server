@@ -20,7 +20,7 @@ def events(request):
         event_name = 'post event type'
 
     response = jsonhelper.toJSON(EventType(name=event_name))
-    return HttpResponse(str(response),'application/json')
+    return jsonhelper.json_response(response)
 
 def addNewEvent(request):
     """
@@ -51,9 +51,11 @@ def addNewEvent(request):
         for k in keywords:
             event.keywords.add(k)
         event.save()
+        response['pk'] = event.pk
     except DeserializationError as error:
         response['response'] = str(error)
-    return HttpResponse(str(response),'application/json')
+        
+    return jsonhelper.json_response(response)
 
 def getEventsWithin(request, latitude, longitude, distance_meters):
     pnt = GEOSGeometry('POINT('+latitude+' '+longitude+')')
