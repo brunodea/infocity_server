@@ -57,12 +57,17 @@ def addNewEvent(request):
         
     return jsonhelper.json_response(response)
 
-def getEventsWithin(request, latitude, longitude, distance_meters):
-    pnt = GEOSGeometry('POINT('+latitude+' '+longitude+')')
-    events = Event.objects.filter(geo_coord__distance_lte=(pnt,float(distance_meters)))
+def getEventsWithin(request, latitude, longitude, distance_meters, discard_pks):
+    pnt = GEOSGeometry('POINT('+longitude+' '+latitude+')')
+    discard_pks = map(int,filter(None, discard_pks.split('/')))
+    events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
     response = {'size': len(events)}
     i = 0
+
     for e in events:
+        if e.pk in discard_pks:
+            continue
+        response[str(i)] = str(e)
         event_type = EventType.objects.get(pk=e.event_type.pk).name
         keywords = [EventKeyword.objects.get(pk=key.pk).keyword for key in e.keywords.all()]
         json = eval(jsonhelper.toJSON(e))
@@ -70,9 +75,8 @@ def getEventsWithin(request, latitude, longitude, distance_meters):
         json['fields']['event_type'] = event_type
         json['fields']['keywords'] = keywords
         response['event_'+str(i)] = json
-    return HttpResponse(str(response),'application/json')
-
-
+        i += 1
+    return jsonhelper.json_response(response)
 
 
 
