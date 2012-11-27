@@ -1,8 +1,9 @@
-from models import EventType, Event, EventKeyword
+from models import EventType, Event, EventKeyword, EventContextData
 from django.http import HttpResponse
 from django.core.serializers.base import DeserializationError
 from django.contrib.gis.geos import GEOSGeometry
 
+from django.utils import simplejson
 import jsonhelper
 
 def addNewEvent(request):
@@ -40,7 +41,8 @@ def addNewEvent(request):
         
         cd = eval(request.POST['context_data'].encode('utf-8'))
         contextdata = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
-            movement_state=cd['movement_state'],address=cd['address'],event=event)
+            movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'],
+            event=event)
         contextdata.save()
         
         response['pk'] = event.pk
@@ -50,21 +52,28 @@ def addNewEvent(request):
     #returns a json with an error or an ok and the primary key from the added event.
     return jsonhelper.json_response(response)
 
-def getEventsWithin(request, latitude, longitude, distance_meters, discard_pks):
+def getEventsWithin(request, latitude, longitude, distance_meters, context_data):
     """
     Returns a json with all the events within some distance from some location
     and that doesn't have the primary key in the list discard_pks.
     """
     pnt = GEOSGeometry('POINT('+longitude+' '+latitude+')')
     #creates the list of not wanted primary keys.
-    discard_pks = map(int,filter(None, discard_pks.split('/')))
     events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
+    
+    
+    cd = eval(context_data.encode('utf-8'))
+    curr_contextdata = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
+        movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'])
+    
     response = {'size': len(events)}
     i = 0
 
     for e in events:
-        if e.pk in discard_pks:
+        contextdata = EventContextData.objects.get(event=e)
+        if not eventIsRelevant(e, contextdata):
             continue
+    
         response[str(i)] = str(e)
         #sends the name string of event_type and the keywords instead of sending
         #their primary keys.
@@ -75,6 +84,7 @@ def getEventsWithin(request, latitude, longitude, distance_meters, discard_pks):
         json['fields']['keywords'] = keywords
         response['event_'+str(i)] = json
         i += 1
+            
     #returns a json with the number of fetched events and with them as well.
     return jsonhelper.json_response(response)
 
@@ -87,6 +97,7 @@ def getEventTypes(request):
     
     return jsonhelper.json_response(response)
 
-
+def eventIsRelevant(event, context_data):
+    return True
 
 
