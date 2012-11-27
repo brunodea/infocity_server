@@ -14,6 +14,16 @@ class EventKeyword(models.Model):
     def __unicode__(self):
         return str(self.keyword.encode('utf-8'))
 
+class EventContextData(models.Model):
+    place_name = models.CharField(max_length=128)
+    place_type = models.CharField(max_length=128)
+    movement_state = models.CharField(max_length=64)
+    on_commute = models.BooleanField(initial=False)
+    address = models.CharField(max_length=1024)
+    
+    def __unicode__(self):
+        return '%s (%s)' % (self.place_name.encode('utf-8'),self.place_type.encode('utf-8'))
+
 class Event(models.Model):
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=512)

@@ -72,8 +72,14 @@ def getEventsWithin(request, latitude, longitude, distance_meters, discard_pks):
     #returns a json with the number of fetched events and with them as well.
     return jsonhelper.json_response(response)
 
-
-
+def getEventTypes(request):
+    response = {}
+    types = []
+    for t in EventType.objects.all():
+        types.append(t.name)
+    response['types'] = types
+    
+    return jsonhelper.json_response(response)
 
 
 
