@@ -37,6 +37,12 @@ def addNewEvent(request):
         for k in keywords:
             event.keywords.add(k)
         event.save()
+        
+        cd = eval(request.POST['context_data'].encode('utf-8'))
+        contextdata = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
+            movement_state=cd['movement_state'],address=cd['address'],event=event)
+        contextdata.save()
+        
         response['pk'] = event.pk
     except DeserializationError as error:
         response['response'] = str(error)
