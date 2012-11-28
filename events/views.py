@@ -61,17 +61,19 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     #creates the list of not wanted primary keys.
     events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
     
+    cd = context_data.encode('utf-8')
+    if cd[0] == '"':
+        cd = cd[1:-1]
     
-    cd = eval(context_data.encode('utf-8'))
-    curr_contextdata = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
+    cd = eval(cd)
+    in_contextdata = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
         movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'])
     
     response = {'size': len(events)}
     i = 0
 
     for e in events:
-        contextdata = EventContextData.objects.get(event=e)
-        if not eventIsRelevant(e, contextdata):
+        if not eventIsRelevant(e, in_contextdata):
             continue
     
         response[str(i)] = str(e)
@@ -97,7 +99,10 @@ def getEventTypes(request):
     
     return jsonhelper.json_response(response)
 
-def eventIsRelevant(event, context_data):
+def eventIsRelevant(event, in_context_data):
+    contextdata = EventContextData.objects.get(event=e)
+    if contextdata:
+        pass
     return True
 
 
