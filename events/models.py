@@ -35,6 +35,7 @@ class EventContextData(models.Model):
     movement_state = models.CharField(max_length=64)
     on_commute = models.BooleanField()
     address = models.CharField(max_length=1024)
+    from_supplier = models.CharField(max_length=64)
     
     event = models.ForeignKey(Event)
     

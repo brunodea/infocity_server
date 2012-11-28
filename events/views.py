@@ -42,7 +42,7 @@ def addNewEvent(request):
         cd = eval(request.POST['context_data'].encode('utf-8'))
         contextdata = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
             movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'],
-            event=event)
+            from_supplier=cd['from_supplier'],event=event)
         contextdata.save()
         
         response['pk'] = event.pk
@@ -67,7 +67,8 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     
     cd = eval(cd)
     in_contextdata = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
-        movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'])
+        movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'],
+        from_supplier=cd['from_supplier'])
     
     response = {'size': len(events)}
     i = 0
@@ -100,7 +101,7 @@ def getEventTypes(request):
     return jsonhelper.json_response(response)
 
 def eventIsRelevant(event, in_context_data):
-    contextdata = EventContextData.objects.get(event=e)
+    contextdata = EventContextData.objects.get(event=event)
     if contextdata:
         pass
     return True
