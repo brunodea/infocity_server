@@ -39,10 +39,8 @@ def addNewEvent(request):
             event.keywords.add(k)
         event.save()
         
-        cd = eval(request.POST['context_data'].encode('utf-8'))
-        contextdata = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
-            movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'],
-            from_supplier=cd['from_supplier'],event=event)
+        contextdata = generateContextData(request.POST['context_data'])
+        contextdata.event = event
         contextdata.save()
         
         response['pk'] = event.pk
@@ -61,14 +59,7 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     #creates the list of not wanted primary keys.
     events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
     
-    cd = context_data.encode('utf-8')
-    if cd[0] == '"':
-        cd = cd[1:-1]
-    
-    cd = eval(cd)
-    in_contextdata = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
-        movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'],
-        from_supplier=cd['from_supplier'])
+    in_contextdata = generateContextData(context_data)
     
     response = {'size': len(events)}
     i = 0
@@ -91,6 +82,17 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     #returns a json with the number of fetched events and with them as well.
     return jsonhelper.json_response(response)
 
+def generateContextData(context_data_json):
+    cd = context_data_json.encode('utf-8')
+    if cd[0] == '"':
+        cd = cd[1:-1]
+    
+    cd = eval(cd)
+    context_data = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
+        movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'],
+        from_supplier=cd['from_supplier'])
+    return context_data
+
 def getEventTypes(request):
     response = {}
     types = []
@@ -101,9 +103,9 @@ def getEventTypes(request):
     return jsonhelper.json_response(response)
 
 def eventIsRelevant(event, in_context_data):
-    contextdata = EventContextData.objects.get(event=event)
-    if contextdata:
-        pass
+#    contextdata = EventContextData.objects.get(event=event)
+#    if contextdata:
+#        pass
     return True
 
 
