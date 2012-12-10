@@ -56,8 +56,15 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     and that doesn't have the primary key in the list discard_pks.
     """
     pnt = GEOSGeometry('POINT('+longitude+' '+latitude+')')
-    #creates the list of not wanted primary keys.
-    events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
+    
+    cd_dict = contextDataJSONToDict(context_data)
+    cd_filter = cd_dict['filter_eventtype']
+    eventtype_filter = EventType.objects.filter(name=cd_filter)
+    if eventtype_filter:
+        events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)),
+                                      event_type=eventtype_filter)
+    else:
+        events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
     
     in_contextdata = generateContextData(context_data)
     
@@ -66,7 +73,7 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
 
     for e in events:
         if not eventIsRelevant(e, in_contextdata):
-            continue
+                continue
     
         response[str(i)] = str(e)
         #sends the name string of event_type and the keywords instead of sending
@@ -82,12 +89,16 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     #returns a json with the number of fetched events and with them as well.
     return jsonhelper.json_response(response)
 
-def generateContextData(context_data_json):
+def contextDataJSONToDict(context_data_json):
     cd = context_data_json.encode('utf-8')
     if cd[0] == '"':
         cd = cd[1:-1]
-    
     cd = eval(cd)
+    
+    return cd
+
+def generateContextData(context_data_json):
+    cd = contextDataJSONToDict(context_data_json)
     context_data = EventContextData(place_name=cd['place_name'],place_type=cd['place_type'],
         movement_state=cd['movement_state'],address=cd['address'],on_commute=cd['on_commute'],
         from_supplier=cd['from_supplier'])
