@@ -58,12 +58,17 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     pnt = GEOSGeometry('POINT('+longitude+' '+latitude+')')
     
     cd_dict = contextDataJSONToDict(context_data)
-    cd_filter = cd_dict['filter_eventtype']
-    eventtype_filter = EventType.objects.filter(name=cd_filter)
-    if eventtype_filter:
-        events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)),
-                                      event_type=eventtype_filter)
-    else:
+    has_filter = 'filter_eventtype' in cd_dict
+    if has_filter:
+        cd_filter = cd_dict['filter_eventtype']
+        eventtype_filter = EventType.objects.filter(name=cd_filter)
+        if eventtype_filter:
+            events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)),
+                                          event_type=eventtype_filter)
+        else:
+            has_filter = False
+    
+    if not has_filter:
         events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
     
     in_contextdata = generateContextData(context_data)
