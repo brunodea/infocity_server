@@ -42,3 +42,18 @@ class EventContextData(models.Model):
     def __unicode__(self):
         return '%s (%s)' % (self.place_name.encode('utf-8'),self.place_type.encode('utf-8'))
 
+class EventLike(models.Model):
+    event = models.ForeignKey(Event)
+    user_id = models.CharField(max_length=512)
+    
+    like = models.BooleanField(default=False)
+    
+    def __unicode__(self):
+        if self.like:
+            return 'like'
+        else:
+            return 'dislike'
+
+
+
+

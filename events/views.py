@@ -1,4 +1,4 @@
-from models import EventType, Event, EventKeyword, EventContextData
+from models import EventType, Event, EventKeyword, EventContextData, EventLike
 from django.http import HttpResponse
 from django.core.serializers.base import DeserializationError
 from django.contrib.gis.geos import GEOSGeometry
@@ -50,6 +50,61 @@ def addNewEvent(request):
     #returns a json with an error or an ok and the primary key from the added event.
     return jsonhelper.json_response(response)
 
+def getLikeAction(request, event_id, user_id):
+    response = {}
+    event = Event.objects.get(pk=event_id)
+    if event:
+        try:
+            event_like = EventLike.objects.get(user_id=user_id,event=event)
+            like_action = 0
+            if event_like.like == False:
+                like_action = 1
+        except Exception as e:
+            like_action = -1
+
+        response['like_action'] = like_action
+    else:
+        response['error'] = 'event ' + event_id + ' doest not exits in the database.'
+    return jsonhelper.json_response(response)
+    
+def likeEvent(request, event_id, user_id, like):
+    response = {}
+    event = Event.objects.get(pk=event_id)
+    if event:
+        try:
+            event_like = EventLike.objects.get(user_id=user_id,event=event)
+        except Exception as e:
+            event_like = None
+        if event_like:
+            if like == -1:
+                EventLike.objects.remove(event_like)
+            else:
+                event_like.like = like == 0
+                event_like.save()
+        elif not like == -1:
+            event_like = EventLike(event=event,user_id=user_id,like=like == 0)
+            event_like.save()
+    
+        response['ok'] = 'ok'        
+    else:
+        response['error'] = 'error: event ' + str(event_id) + ' does not exist.'
+    
+    return jsonhelper.json_response(response)
+
+def countLikes(event_id):
+    event = Event.objects.get(pk=event_id)
+    if not event:
+        return 0
+    likes = EventLike.objects.filter(event=event,like=True)
+    return likes.count()
+
+def countDislikes(event_id):
+    event = Event.objects.get(pk=event_id)
+    if not event:
+        return 0
+    dislikes = EventLike.objects.filter(event=event,like=False)
+    return dislikes.count()
+
 def getEventsWithin(request, latitude, longitude, distance_meters, context_data):
     """
     Returns a json with all the events within some distance from some location
@@ -88,6 +143,8 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
         json = eval(jsonhelper.toJSON(e))
         json['fields']['event_type'] = event_type
         json['fields']['keywords'] = keywords
+        json['fields']['likes'] = countLikes(e.pk)
+        json['fields']['dislikes'] = countDislikes(e.pk)
         response['event_'+str(i)] = json
         i += 1
             
