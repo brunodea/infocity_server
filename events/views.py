@@ -105,6 +105,12 @@ def countDislikes(event_id):
     dislikes = EventLike.objects.filter(event=event,like=False)
     return dislikes.count()
 
+def countLikesDislikes(event_id):
+    response['likes'] = countLikes(event_id)
+    response['dislikes'] = countDislikes(event_id)
+    
+    return jsonhelper.json_response(response)
+
 def getEventsWithin(request, latitude, longitude, distance_meters, context_data):
     """
     Returns a json with all the events within some distance from some location

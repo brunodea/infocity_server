@@ -8,4 +8,5 @@ urlpatterns = patterns('events.views',
     url(r'^likeEvent/(?P<event_id>\d+)/(?P<user_id>.+)/(?P<like>-?\d)/$',
         'likeEvent'),
     url(r'^getLikeAction/(?P<event_id>\d+)/(?P<user_id>.+)/$', 'getLikeAction'),
+    url(r'^countLikesDislikes/(?P<event_id>\d+)/$', 'countLikesDislikes'),
 )
