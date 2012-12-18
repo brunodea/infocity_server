@@ -28,6 +28,8 @@ class Event(models.Model):
     def __unicode__(self):
         return self.title.encode('utf-8') + " " + str(self.geo_coord)
 
+    def relevant_info(self):
+        return self.title + ' ' + self.description + ' ' + str(self.event_type) + ' ' + ' '.join(map(str,self.keywords.all()))
 
 class EventContextData(models.Model):
     place_name = models.CharField(max_length=128)
@@ -41,6 +43,9 @@ class EventContextData(models.Model):
     
     def __unicode__(self):
         return '%s (%s)' % (self.place_name.encode('utf-8'),self.place_type.encode('utf-8'))
+
+    def relevant_info(self):
+        return self.place_name + ' ' + self.place_type
 
 class EventLike(models.Model):
     event = models.ForeignKey(Event)

@@ -5,6 +5,7 @@ from django.contrib.gis.geos import GEOSGeometry
 
 from django.utils import simplejson
 import jsonhelper
+import textretrieval
 
 def addNewEvent(request):
     """
@@ -120,6 +121,8 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     
     cd_dict = contextDataJSONToDict(context_data)
     has_filter = 'filter_eventtype' in cd_dict
+
+    in_contextdata = generateContextData(context_data)
     if has_filter:
         cd_filter = cd_dict['filter_eventtype']
         eventtype_filter = EventType.objects.filter(name=cd_filter)
@@ -131,16 +134,12 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     
     if not has_filter:
         events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
-    
-    in_contextdata = generateContextData(context_data)
-    
+        events = sort_events_by_relevance([e for e in events], in_contextdata, 3)
+       
     response = {'size': len(events)}
     i = 0
 
     for e in events:
-        if not eventIsRelevant(e, in_contextdata):
-                continue
-    
         response[str(i)] = str(e)
         #sends the name string of event_type and the keywords instead of sending
         #their primary keys.
@@ -181,10 +180,20 @@ def getEventTypes(request):
     
     return jsonhelper.json_response(response)
 
-def eventIsRelevant(event, in_context_data):
-#    contextdata = EventContextData.objects.get(event=event)
-#    if contextdata:
-#        pass
-    return True
+def sort_events_by_relevance(events, in_context, num_max):
+    query = in_context.relevant_info().lower()
+    texts = []
+    for e in events:
+        try:
+            context = EventContextData.objects.get(event=e)
+            texts.append((e.pk,(e.relevant_info() + ' ' + context.relevant_info()).lower()))
+        except Exception as e:
+            pass
+    sorted_pks = textretrieval.relevant_texts(texts, query)
 
+    events = []
+    for pk in sorted_pks:
+        events.append(Event.objects.get(pk=pk))
+
+    return events[:num_max]
 
