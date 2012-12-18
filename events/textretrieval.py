@@ -3,6 +3,9 @@ import math
 import operator
 from nltk.corpus import stopwords
 from nltk.stem import RSLPStemmer
+from ptstemmer.implementations.OrengoStemmer import OrengoStemmer
+from ptstemmer.implementations.SavoyStemmer import SavoyStemmer
+from ptstemmer.implementations.PorterStemmer import PorterStemmer
 
 def keywords(text):
     words = re.findall(r'\w+', text.lower(), flags=re.UNICODE | re.LOCALE)
@@ -11,8 +14,18 @@ def keywords(text):
     return list(keywords)
     
 def only_stems(keywords):
-    st = RSLPStemmer()
-    return list(set(map(lambda x: st.stem(x), keywords)))
+    st = PorterStemmer()
+    os = OrengoStemmer()
+    ss = SavoyStemmer()
+
+    rs = RSLPStemmer()
+    
+    stem1 = [st.getWordStem(x.encode('utf8')) for x in keywords]
+    stem2 = [rs.stem(x.encode('utf8')) for x in keywords]
+    stem3 = [os.getWordStem(x.encode('utf8')) for x in keywords]
+    stem4 = [ss.getWordStem(x.encode('utf8')) for x in keywords]
+
+    return list(set(stem1+stem2+stem3+stem4))
     
 def freq(text, term):
     return text.count(term)
@@ -42,6 +55,7 @@ def relevant_texts(texts, query):
     texts = [(pk, ' '.join(only_stems(keywords(text)))) for pk, text in texts]
     terms = only_stems(keywords(query))
 
+    print("terms: "+str(terms))
     term_frequency_matrix = tfm(texts, terms)
 
     res = {}
