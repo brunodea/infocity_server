@@ -112,7 +112,7 @@ def countLikesDislikes(event_id):
     
     return jsonhelper.json_response(response)
 
-def getEventsWithin(request, latitude, longitude, distance_meters, context_data):
+def getEventsWithin(request, latitude, longitude, distance_meters, max_events, context_data):
     """
     Returns a json with all the events within some distance from some location
     and that doesn't have the primary key in the list discard_pks.
@@ -134,13 +134,16 @@ def getEventsWithin(request, latitude, longitude, distance_meters, context_data)
     
     if not has_filter:
         events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
-        events = sort_events_by_relevance([e for e in events], in_contextdata, 3)
+    
+        if not str(in_contextdata.from_supplier).lower() == 'filtro':
+            events = sort_events_by_relevance([e for e in events], in_contextdata)
        
     response = {'size': len(events)}
     i = 0
 
     for e in events:
-        response[str(i)] = str(e)
+        if i == int(max_events):
+            break
         #sends the name string of event_type and the keywords instead of sending
         #their primary keys.
         event_type = EventType.objects.get(pk=e.event_type.pk).name
@@ -180,7 +183,7 @@ def getEventTypes(request):
     
     return jsonhelper.json_response(response)
 
-def sort_events_by_relevance(events, in_context, num_max):
+def sort_events_by_relevance(events, in_context):
     query = in_context.relevant_info().lower()
     texts = []
     for e in events:
@@ -195,5 +198,5 @@ def sort_events_by_relevance(events, in_context, num_max):
     for pk in sorted_pks:
         events.append(Event.objects.get(pk=pk))
 
-    return events[:num_max]
+    return events
 

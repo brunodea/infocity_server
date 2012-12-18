@@ -31,6 +31,8 @@ def idf(term_frequency_matrix, term_id):
     for d in term_frequency_matrix:
         if term_frequency_matrix[d][term_id] > 0:
             dt += 1
+    if dt == 0:
+        return 0
     return math.log((1+len(term_frequency_matrix))/dt)
 
 def tf_idf(term_frequency_matrix, text_id, term_id):
@@ -42,11 +44,10 @@ def relevant_texts(texts, query):
 
     term_frequency_matrix = tfm(texts, terms)
 
-    num_terms = len(terms)
     res = {}
     for text_id in term_frequency_matrix:
         relevance = 0
-        for term_id in range(0,num_terms):
+        for term_id in range(0,len(terms)):
             relevance += tf_idf(term_frequency_matrix, text_id, term_id)
         if relevance != 0:
             res[text_id] = relevance
