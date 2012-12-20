@@ -2,8 +2,9 @@ from models import EventType, Event, EventKeyword, EventContextData, EventLike, 
 from django.http import HttpResponse
 from django.core.serializers.base import DeserializationError
 from django.contrib.gis.geos import GEOSGeometry
-
 from django.utils import simplejson
+import dateutil.parser
+
 import jsonhelper
 import textretrieval
 
@@ -213,7 +214,7 @@ def getComments(request, event_id):
         response = {}
         i = 0
         for ec in EventComment.objects.filter(event=event):
-            response['comment_'+str(i)] = {'user_id': ec.user_id, 'comment': ec.comment, 'user_name': ec.user_name}
+            response['comment_'+str(i)] = {'user_id': ec.user_id, 'comment': ec.comment, 'user_name': ec.user_name, 'date': ec.date}
             i += 1
         response['size'] = i
 
@@ -224,9 +225,10 @@ def saveComment(request):
     user_id = request.POST['user_id']
     comment = request.POST['comment']
     user_name = request.POST['user_name']
+    date = dateutil.parser.parse(request.POST['date'])
 
     event = Event.objects.get(pk=int(event_id))
-    e = EventComment(user_id=user_id,comment=comment,user_name=user_name,event=event)
+    e = EventComment(user_id=user_id,comment=comment,user_name=user_name,event=event,date=date)
     e.save()
     
     return jsonhelper.json_response({'ok':'ok'})
