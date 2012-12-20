@@ -1,4 +1,4 @@
-from models import EventType, Event, EventKeyword, EventContextData, EventLike
+from models import EventType, Event, EventKeyword, EventContextData, EventLike, EventComment
 from django.http import HttpResponse
 from django.core.serializers.base import DeserializationError
 from django.contrib.gis.geos import GEOSGeometry
@@ -199,4 +199,35 @@ def sort_events_by_relevance(events, in_context):
         events.append(Event.objects.get(pk=pk))
 
     return events
+
+def getComments(request, event_id):
+    response = {}
+    ok = False
+    try:
+        event = Event.objects.get(pk=event_id)
+        ok = True
+    except Exception as e:
+        response['error'] = 'invalid event_id'        
+
+    if ok:
+        response = {}
+        i = 0
+        for ec in EventComment.objects.filter(event=event):
+            response['comment_'+str(i)] = {'user_id': ec.user_id, 'comment': ec.comment, 'user_name': ec.user_name}
+            i += 1
+        response['size'] = i
+
+    return jsonhelper.json_response(response)
+
+def saveComment(request):
+    event_id = request.POST['event_id']
+    user_id = request.POST['user_id']
+    comment = request.POST['comment']
+    user_name = request.POST['user_name']
+
+    event = Event.objects.get(pk=int(event_id))
+    e = EventComment(user_id=user_id,comment=comment,user_name=user_name,event=event)
+    e.save()
+    
+    return jsonhelper.json_response({'ok':'ok'})
 

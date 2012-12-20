@@ -59,6 +59,16 @@ class EventLike(models.Model):
         else:
             return 'dislike'
 
+class EventComment(models.Model):
+    event = models.ForeignKey(Event)
+    user_id = models.CharField(max_length=512)
+    user_name = models.CharField(max_length=128)
+    
+    comment = models.CharField(max_length=1024)
+
+    def __unicode__(self):
+        return '%s' % (self.comment)
+
 
 
 
