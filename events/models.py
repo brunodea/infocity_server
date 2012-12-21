@@ -63,7 +63,7 @@ class EventComment(models.Model):
     event = models.ForeignKey(Event)
     user_id = models.CharField(max_length=512)
     user_name = models.CharField(max_length=128)
-    date = models.DateTimeField('pub_date')
+    pub_date = models.DateTimeField('pub_date')
 
     comment = models.CharField(max_length=1024)
 
