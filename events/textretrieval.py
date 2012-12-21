@@ -51,22 +51,6 @@ def idf(term_frequency_matrix, term_id):
 def tf_idf(term_frequency_matrix, text_id, term_id):
     return tf(term_frequency_matrix, text_id, term_id)*idf(term_frequency_matrix, term_id)
 
-def relevant_texts(texts, query):
-    texts = [(pk, ' '.join(only_stems(keywords(text)))) for pk, text in texts]
-    terms = only_stems(keywords(query))
-
-    print("terms: "+str(terms))
-    term_frequency_matrix = tfm(texts, terms)
-
-    res = {}
-    for text_id in term_frequency_matrix:
-        relevance = 0
-        for term_id in range(0,len(terms)):
-            relevance += tf_idf(term_frequency_matrix, text_id, term_id)
-        if relevance != 0:
-            res[text_id] = relevance
-
-    return sorted(res,key=res.__getitem__,reverse=True)
 
 
 

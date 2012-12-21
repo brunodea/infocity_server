@@ -198,7 +198,7 @@ def sort_events_by_relevance(events, in_context):
             texts.append((e.pk,(e.relevant_info() + ' ' + context.relevant_info()).lower()))
         except Exception as e:
             pass
-    sorted_pks = textretrieval.relevant_texts(texts, query)
+    sorted_pks = relevant_pks(texts, query)
 
     events = []
     for pk in sorted_pks:
@@ -206,6 +206,27 @@ def sort_events_by_relevance(events, in_context):
 
     return events
 
+def relevant_pks(texts, query):
+    texts = [(pk, ' '.join(textretrieval.only_stems(textretrieval.keywords(text)))) for pk, text in texts]
+    terms = textretrieval.only_stems(textretrieval.keywords(query))
+
+    print("terms: "+str(terms))
+    term_frequency_matrix = textretrieval.tfm(texts, terms)
+
+    res = {}
+    for text_id in term_frequency_matrix:
+        relevance = 0
+        for term_id in range(0,len(terms)):
+            relevance += textretrieval.tf_idf(term_frequency_matrix, text_id, term_id)
+        if relevance != 0:
+            likes = countLikes(text_id)
+            dislikes = countDislikes(text_id)
+            if likes != 0:
+                relevance += relevance*likes/(likes+dislikes)
+            res[text_id] = relevance
+
+    return sorted(res,key=res.__getitem__,reverse=True)
+    
 def getComments(request, event_id):
     response = {}
     ok = False
