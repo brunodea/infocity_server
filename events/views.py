@@ -70,7 +70,11 @@ def getLikeAction(request, event_id, user_id):
         response['error'] = 'event ' + event_id + ' doest not exits in the database.'
     return jsonhelper.json_response(response)
     
-def likeEvent(request, event_id, user_id, like):
+def likeEvent(request):
+    event_id = int(request.POST['event_id'])
+    user_id = request.POST['user_id']
+    like = int(request.POST['like'])
+
     response = {}
     event = Event.objects.get(pk=event_id)
     if event:
@@ -80,7 +84,7 @@ def likeEvent(request, event_id, user_id, like):
             event_like = None
         if event_like:
             if like == -1:
-                EventLike.objects.remove(event_like)
+                event_like.delete()
             else:
                 event_like.like = like == 0
                 event_like.save()
