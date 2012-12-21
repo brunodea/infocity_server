@@ -3,9 +3,10 @@ from django.http import HttpResponse
 from django.core.serializers.base import DeserializationError
 from django.contrib.gis.geos import GEOSGeometry
 from django.utils import simplejson
+from django.utils.timezone import utc
 import dateutil.parser
 import re
-
+import datetime
 import jsonhelper
 import textretrieval
 
@@ -210,7 +211,6 @@ def relevant_pks(texts, query):
     texts = [(pk, ' '.join(textretrieval.only_stems(textretrieval.keywords(text)))) for pk, text in texts]
     terms = textretrieval.only_stems(textretrieval.keywords(query))
 
-    print("terms: "+str(terms))
     term_frequency_matrix = textretrieval.tfm(texts, terms)
 
     res = {}
@@ -223,8 +223,12 @@ def relevant_pks(texts, query):
             dislikes = countDislikes(text_id)
             if likes != 0:
                 relevance += relevance*likes/(likes+dislikes)
-            res[text_id] = relevance
-
+            if dislikes != 0:
+                relevance -= relevance*dislikes/(likes+dislikes)
+            date = Event.objects.get(pk=text_id).pub_date
+            now = datetime.datetime.utcnow().replace(tzinfo=utc)
+            timedelta = (now-date)
+            res[text_id] = relevance/(timedelta.days+timedelta.seconds)
     return sorted(res,key=res.__getitem__,reverse=True)
     
 def getComments(request, event_id):
