@@ -142,8 +142,8 @@ def getEventsWithin(request, latitude, longitude, distance_meters, max_events, c
     if not has_filter:
         events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)))
     
-        if not str(in_contextdata.from_supplier).lower() == 'filtro':
-            events = sort_events_by_relevance([e for e in events], in_contextdata)
+    if not str(in_contextdata.from_supplier).lower() == 'filtro':
+        events = sort_events_by_relevance([e for e in events], in_contextdata)
        
     response = {'size': len(events)}
     i = 0
@@ -209,15 +209,16 @@ def sort_events_by_relevance(events, in_context):
 
 def relevant_pks(texts, query):
     texts = [(pk, ' '.join(textretrieval.only_stems(textretrieval.keywords(text)))) for pk, text in texts]
-    terms = textretrieval.only_stems(textretrieval.keywords(query))
+    terms = list(set(textretrieval.only_stems(textretrieval.keywords(query))))
 
     term_frequency_matrix = textretrieval.tfm(texts, terms)
-
     res = {}
+
     for text_id in term_frequency_matrix:
         relevance = 0
         for term_id in range(0,len(terms)):
             relevance += textretrieval.tf_idf(term_frequency_matrix, text_id, term_id)
+
         if relevance != 0:
             likes = countLikes(text_id)
             dislikes = countDislikes(text_id)
@@ -228,7 +229,8 @@ def relevant_pks(texts, query):
             date = Event.objects.get(pk=text_id).pub_date
             now = datetime.datetime.utcnow().replace(tzinfo=utc)
             timedelta = (now-date)
-            res[text_id] = relevance/(timedelta.days+timedelta.seconds)
+            relevance = relevance/(timedelta.days+timedelta.seconds)
+            res[text_id] = relevance
     return sorted(res,key=res.__getitem__,reverse=True)
     
 def getComments(request, event_id):
