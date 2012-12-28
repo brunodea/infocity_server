@@ -136,6 +136,7 @@ def getEventsWithin(request, latitude, longitude, distance_meters, max_events, c
         if eventtype_filter:
             events = Event.objects.filter(geo_coord__distance_lt=(pnt,float(distance_meters)),
                                           event_type=eventtype_filter)
+            events = sorted([e for e in events], key=lambda event: event.pub_date)[::-1]
         else:
             has_filter = False
     
