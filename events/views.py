@@ -223,15 +223,13 @@ def relevant_pks(texts, query):
         if relevance != 0:
             likes = countLikes(text_id)
             dislikes = countDislikes(text_id)
-            if likes != 0:
-                relevance += relevance*likes/(likes+dislikes)
-            if dislikes != 0:
-                relevance -= relevance*dislikes/(likes+dislikes)
+            relevance = relevance + ((likes-dislikes)*relevance*.001)
             date = Event.objects.get(pk=text_id).pub_date
             now = datetime.datetime.utcnow().replace(tzinfo=utc)
             timedelta = (now-date)
-            relevance = relevance/(timedelta.days+timedelta.seconds)
+            relevance = 1000*relevance/(timedelta.days+timedelta.seconds)
             res[text_id] = relevance
+#            print('id: '+str(text_id)+' rel: '+str(relevance*100))
     return sorted(res,key=res.__getitem__,reverse=True)
     
 def getComments(request, event_id):
